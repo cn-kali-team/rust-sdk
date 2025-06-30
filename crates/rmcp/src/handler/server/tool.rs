@@ -18,9 +18,10 @@ use crate::{
 pub fn schema_for_type<T: JsonSchema>() -> JsonObject {
     // explicitly to align json schema version to official specifications.
     // https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2025-03-26/schema.json
-    let mut settings = schemars::generate::SchemaSettings::draft07();
-    settings.meta_schema = None;
-    settings.inline_subschemas = true;
+    let mut settings = schemars::generate::SchemaSettings::draft07().with(|s| {
+        s.meta_schema = None;
+        s.inline_subschemas = true;
+    });
     let generator = settings.into_generator();
     let schema = generator.into_root_schema_for::<T>();
     let object = serde_json::to_value(schema).expect("failed to serialize schema");
