@@ -18,10 +18,9 @@ use crate::{
 pub fn schema_for_type<T: JsonSchema>() -> JsonObject {
     // explicitly to align json schema version to official specifications.
     // https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2025-03-26/schema.json
-    let mut settings = schemars::r#gen::SchemaSettings::draft07();
-    settings.option_nullable = true;
-    settings.option_add_null_type = false;
-    settings.visitors = Vec::default();
+    let mut settings = schemars::generate::SchemaSettings::draft07();
+    settings.meta_schema = None;
+    settings.inline_subschemas = true;
     let generator = settings.into_generator();
     let schema = generator.into_root_schema_for::<T>();
     let object = serde_json::to_value(schema).expect("failed to serialize schema");
@@ -183,11 +182,11 @@ pub type DynCallToolHandler<S> = dyn for<'s> Fn(ToolCallContext<'s, S>) -> BoxFu
 pub struct Parameters<P>(pub P);
 
 impl<P: JsonSchema> JsonSchema for Parameters<P> {
-    fn schema_name() -> String {
+    fn schema_name() -> Cow<'static, str> {
         P::schema_name()
     }
 
-    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
         P::json_schema(generator)
     }
 }
