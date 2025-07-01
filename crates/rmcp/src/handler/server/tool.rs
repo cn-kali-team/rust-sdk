@@ -4,6 +4,7 @@ use std::{
 
 use futures::future::{BoxFuture, FutureExt};
 use schemars::JsonSchema;
+use schemars::transform::AddNullable;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tokio_util::sync::CancellationToken;
 
@@ -18,9 +19,11 @@ use crate::{
 pub fn schema_for_type<T: JsonSchema>() -> JsonObject {
     // explicitly to align json schema version to official specifications.
     // https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2025-03-26/schema.json
-    let mut settings = schemars::generate::SchemaSettings::draft07().with(|s| {
+    let settings = schemars::generate::SchemaSettings::draft07().with(|s| {
         s.meta_schema = None;
-        s.inline_subschemas = true;
+        s.inline_subschemas = false;
+        s.transforms = vec![Box::new(AddNullable::default())];
+        s.definitions_path = Cow::Borrowed("#/components/schemas/");
     });
     let generator = settings.into_generator();
     let schema = generator.into_root_schema_for::<T>();
